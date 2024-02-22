@@ -43,7 +43,6 @@ patterns = [
     [r"\;", ";"],
     [r"[a-zA-Z_][a-zA-Z0-9_]*", "identifier"],  # identifiers
     [r".", "error"],  # unexpected content
-    #ADD IN UNARY NEGATION STUFF
 ]
 
 for pattern in patterns:
