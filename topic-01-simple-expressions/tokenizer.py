@@ -45,6 +45,7 @@ patterns = [
     [r".", "error"],  # unexpected content
 ]
 
+
 for pattern in patterns:
     pattern[0] = re.compile(pattern[0])
 

@@ -31,6 +31,11 @@ def parse_term(tokens):
 def parse_factor(tokens):
     token = tokens[0]
     tag = token["tag"]
+    #insert code
+    if tag == "-":
+        right_value, tokens = parse_factor(tokens[1:])
+        return create_node("-", right=right_value, value="-"), tokens
+    #end
     if tag == "number":
         return create_node("number", value=token["value"]), tokens[1:]
     if tag == "(":
