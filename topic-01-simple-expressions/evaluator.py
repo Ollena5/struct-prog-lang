@@ -17,9 +17,6 @@ def evaluate(ast):
         return left_value - right_value
     elif ast["tag"] == "*":
         return left_value * right_value
-    elif ast['kind'] == '/':
-        return left_value / right_value
-        #WILL NEED TO ADD IN UNARY NEGATION SUPPORT
     elif ast["tag"] == "/":
         # Add error handling for division by zero
         if right_value == 0:
@@ -90,9 +87,6 @@ def test_evaluate_division_by_zero():
     except Exception as e:
         assert str(e) == "Division by zero"
 
-def test_evaluate_unary_negation():
-    print("Testing unary negation evaluation.")
-    #ADD MORE HERE
 
 if __name__ == "__main__":
     print("testing evaluator.")
@@ -101,5 +95,4 @@ if __name__ == "__main__":
     test_evaluate_subtraction()
     test_evaluate_division()
     test_evaluate_division_by_zero()
-    #test_evaluate_unary_negation()
     print("done.")

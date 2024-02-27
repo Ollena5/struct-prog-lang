@@ -1,4 +1,3 @@
-#NO EDITS NEEDED IN THIS FILE
 from tokenizer import tokenize
 from parser import parse, format
 from evaluator import evaluate

@@ -126,25 +126,9 @@ def test_format_ast():
     assert result == "-\n    4\n    /\n        2\n        1"
 
 
-def test_unary_negation():
-    print("Testing unary negation...")
-    tokens=tokenize()#PUT SOMETHING HERE
-    ast={
-        "kind": "*",
-        "value": None,
-        "left": {
-            "kind": "+",#Fix this line
-            "value": None,
-            "left": {"kind": "number", "value": 1, "left": None, "right": None},
-            "right": {"kind": "number", "value": 2, "left": None, "right": None},
-        },
-        "right": {"kind": "number", "value": 3, "left": None, "right": None},
-    }
-
 if __name__ == "__main__":
     test_simple_addition_parsing()
     test_nested_expressions_parsing()
     test_operation_precedence_parsing()
     test_format_ast()
-    #test_unary_negation()
     print("done.")
