@@ -1,8 +1,4 @@
-def evaluate(ast, environment):
-
-    # None
-    if ast == None:
-        return None, False
+def evaluate_expression(ast, environment):
 
     # simple values
     if ast["tag"] == "<number>":
@@ -10,7 +6,7 @@ def evaluate(ast, environment):
             float,
             int,
         ], f"unexpected ast numeric value {ast['value']} type is a {type(ast['value'])}."
-        return ast["value"], False
+        return ast["value"], environment
 
     if ast["tag"] == "<identifier>":
         assert type(ast["value"]) in [
@@ -19,168 +15,176 @@ def evaluate(ast, environment):
         current_environment = environment
         while current_environment:
             if ast["value"] in current_environment:
-                return current_environment[ast["value"]], False
+                return current_environment[ast["value"]], environment
             current_environment = current_environment.get("$parent", None)
         assert current_environment, f"undefined identifier {ast['value']} in expression"
 
     if ast["tag"] == "function":
-        return ast, False
+        return ast, environment
 
     if ast["tag"] == "<function_call>":
-        assert "expression" in ast
+        assert "identifier" in ast
         assert "arguments" in ast
-        function, _ = evaluate(ast["expression"], environment)
+        function, environment = evaluate_expression(ast["identifier"], environment)
         assert function["tag"] == "function"
         assert "parameters" in function
         assert "body" in function
         # match the parameters to arguments
-        function_environment = {}
+        local_environment = {}
         parameters = function["parameters"]
         arguments = ast["arguments"]
         while parameters:
             assert arguments
-            arg, _ = evaluate(arguments, environment)
-            function_environment[parameters["value"]] = arg
+            print(parameters, arguments)
+            print(parameters["value"])
+            arg, environment = evaluate(arguments, environment)
+            local_environment[parameters["value"]] = arg
             parameters = parameters.get("next", None)
             arguments = arguments.get("next", None)
         assert parameters == None
         assert arguments == None
-        function_environment["$parent"] = environment
-        result, returning = evaluate(function["body"], function_environment)
-        return result, returning
-
-    if ast["tag"] == "return":
-        value, _ = evaluate(ast.get("value",None), environment)
-        return value, True
+        local_environment["$parent"] = environment
+        result, local_environment = evaluate(function["body"], local_environment)
+        return result, environment
 
     # unary operations
     if ast["tag"] == "negate":
-        value, _ = evaluate(ast["value"], environment)
-        return -value, False
+        value, environment = evaluate(ast["value"], environment)
+        return -value, environment
 
     if ast["tag"] == "not":
-        value, _ = evaluate(ast["value"], environment)
+        value, environment = evaluate(ast["value"], environment)
         if value:
             value = 0
         else:
             value = 1
-        return value, False
+        # left_value = 0 if left_value else 0
+        return value, environment
 
     # binary operations
     if ast["tag"] == "+":
-        left_value, _ = evaluate(ast["left"], environment)
-        right_value, _ = evaluate(ast["right"], environment)
-        return left_value + right_value, False
+        left_value, environment = evaluate(ast["left"], environment)
+        right_value, environment = evaluate(ast["right"], environment)
+        return left_value + right_value, environment
     if ast["tag"] == "-":
-        left_value, _ = evaluate(ast["left"], environment)
-        right_value, _ = evaluate(ast["right"], environment)
-        return left_value - right_value, False
+        left_value, environment = evaluate(ast["left"], environment)
+        right_value, environment = evaluate(ast["right"], environment)
+        return left_value - right_value, environment
     if ast["tag"] == "*":
-        left_value, _ = evaluate(ast["left"], environment)
-        right_value, _ = evaluate(ast["right"], environment)
-        return left_value * right_value, False
+        left_value, environment = evaluate(ast["left"], environment)
+        right_value, environment = evaluate(ast["right"], environment)
+        return left_value * right_value, environment
     if ast["tag"] == "/":
-        left_value, _ = evaluate(ast["left"], environment)
-        right_value, _ = evaluate(ast["right"], environment)
+        left_value, environment = evaluate(ast["left"], environment)
+        right_value, environment = evaluate(ast["right"], environment)
         # Add error handling for division by zero
         if right_value == 0:
             raise Exception("Division by zero")
-        return left_value / right_value, False
-    if ast["tag"]== "%":
-        left_value, _ = evaluate(ast["left"], environment)
-        right_value, _ = evaluate(ast["right"], environment)
-        return left_value % right_value, False
+        return left_value / right_value, environment
     if ast["tag"] == "*":
-        left_value, _ = evaluate(ast["left"], environment)
-        right_value, _ = evaluate(ast["right"], environment)
-        return left_value * right_value, False
+        left_value, environment = evaluate(ast["left"], environment)
+        right_value, environment = evaluate(ast["right"], environment)
+        return left_value * right_value, environment
+    if ast["tag"] == "%":
+        left_value, environment = evaluate(ast["left"], environment)
+        right_value, environment = evaluate(ast["right"], environment)
+        if right_value == 0:
+            raise Exception("Division by zero")
+        return left_value % right_value, environment
     if ast["tag"] == "<":
-        left_value, _ = evaluate(ast["left"], environment)
-        right_value, _ = evaluate(ast["right"], environment)
-        return int(left_value < right_value), False
+        left_value, environment = evaluate(ast["left"], environment)
+        right_value, environment = evaluate(ast["right"], environment)
+        return int(left_value < right_value), environment
     if ast["tag"] == ">":
-        left_value, _ = evaluate(ast["left"], environment)
-        right_value, _ = evaluate(ast["right"], environment)
-        return int(left_value > right_value), False
+        left_value, environment = evaluate(ast["left"], environment)
+        right_value, environment = evaluate(ast["right"], environment)
+        return int(left_value > right_value), environment
     if ast["tag"] == "<=":
-        left_value, _ = evaluate(ast["left"], environment)
-        right_value, _ = evaluate(ast["right"], environment)
-        return int(left_value <= right_value), False
+        left_value, environment = evaluate(ast["left"], environment)
+        right_value, environment = evaluate(ast["right"], environment)
+        return int(left_value <= right_value), environment
     if ast["tag"] == ">=":
-        left_value, _ = evaluate(ast["left"], environment)
-        right_value, _ = evaluate(ast["right"], environment)
-        return int(left_value >= right_value), False
+        left_value, environment = evaluate(ast["left"], environment)
+        right_value, environment = evaluate(ast["right"], environment)
+        return int(left_value >= right_value), environment
     if ast["tag"] == "==":
-        left_value, _ = evaluate(ast["left"], environment)
-        right_value, _ = evaluate(ast["right"], environment)
-        return int(left_value == right_value), False
+        left_value, environment = evaluate(ast["left"], environment)
+        right_value, environment = evaluate(ast["right"], environment)
+        return int(left_value == right_value), environment
     if ast["tag"] == "!=":
-        left_value, _ = evaluate(ast["left"], environment)
-        right_value, _ = evaluate(ast["right"], environment)
-        return int(left_value != right_value), False
+        left_value, environment = evaluate(ast["left"], environment)
+        right_value, environment = evaluate(ast["right"], environment)
+        return int(left_value != right_value), environment
     if ast["tag"] == "&&":
-        left_value, _ = evaluate(ast["left"], environment)
-        right_value, _ = evaluate(ast["right"], environment)
-        return int(left_value and right_value), False
+        left_value, environment = evaluate(ast["left"], environment)
+        right_value, environment = evaluate(ast["right"], environment)
+        return int(left_value and right_value), environment
     if ast["tag"] == "||":
-        left_value, _ = evaluate(ast["left"], environment)
-        right_value, _ = evaluate(ast["right"], environment)
-        return int(left_value or right_value), False
+        left_value, environment = evaluate(ast["left"], environment)
+        right_value, environment = evaluate(ast["right"], environment)
+        return int(left_value or right_value), environment
+    raise Exception(f"Unknown operation: {ast['tag']}")
+
+
+def evaluate_statement(ast, environment):
 
     if ast["tag"] == "block":
-        value, returning = evaluate(ast["statement"], environment)
-        if ast.get("next") and not returning:
-            value, returning = evaluate(ast["next"], environment)
-        if returning:
-            return value, returning
-        else:
-            return None, False
-
-    if ast["tag"] == "if":
-        condition, _ = evaluate(ast["condition"], environment)
-        if condition:
-            value, returning = evaluate(ast["then"], environment)
-            if returning:
-                return value, returning
-            else:
-                return None, False
-        else:
-            if ast.get("else", None):
-                value, returning = evaluate(ast["else"], environment)
-                if returning:
-                    return value, returning
-                else:
-                    return None, False
-            return None, False
-
-    if ast["tag"] == "while":
-        condition, _ = evaluate(ast["condition"], environment)
-        while condition:
-            value, returning = evaluate(ast["do"], environment)
-            if returning:
-                return value, returning
-            condition, _ = evaluate(ast["condition"], environment)
-        return None, False
-
-    if ast["tag"] == "print":
-        argument = ast.get("arguments", None)
-        while argument:
-            value, _ = evaluate(argument, environment)
-            print(value, end=" ")
-            argument = argument.get("next", None)
-        print()
-        return None, False
+        value, environment = evaluate_statement(ast["statement"], environment)
+        if ast.get("next"):
+            value, environment = evaluate_statement(ast["next"], environment)
+        return None, environment
 
     if ast["tag"] == "=":
         assert (
             ast["target"]["tag"] == "<identifier>"
         ), f"ERROR: Expecting identifier in assignment statement."
         identifier = ast["target"]["value"]
+
         assert ast["value"], f"ERROR: Expecting expression in assignment statement."
-        value, _ = evaluate(ast["value"], environment)
+        value, environment = evaluate_expression(ast["value"], environment)
+
         environment[identifier] = value
-        return None, False
-    raise Exception(f"Unknown operation: {ast['tag']}")
+        return None, environment
+
+    if ast["tag"] == "if":
+        condition, environment = evaluate_expression(ast["condition"], environment)
+        if condition:
+            _, environment = evaluate_statement(ast["then"], environment)
+            return None, environment
+        else:
+            if ast.get("else", None):
+                _, environment = evaluate_statement(ast["else"], environment)
+                return None, environment
+        return None, environment
+
+    if ast["tag"] == "while":
+        condition, environment = evaluate_expression(ast["condition"], environment)
+        while condition:
+            _, environment = evaluate_statement(ast["do"], environment)
+            condition, environment = evaluate_expression(ast["condition"], environment)
+        return None, environment
+
+    if ast["tag"] == "print":
+        argument = ast.get("arguments", None)
+        while argument:
+            value, environment = evaluate_expression(argument, environment)
+            print(value, end=" ")
+            argument = argument.get("next", None)
+        print()
+        return None, environment
+    
+    if ast["tag"] == "repeat_until":
+        condition, environment = evaluate_expression(ast["condition"], environment)
+        while condition:
+            _, environment = evaluate_statement(ast["do"], environment)
+            condition, environment = evaluate_expression(ast["condition"], environment)
+        return None, environment
+
+    return evaluate_expression(ast, environment)
+
+
+def evaluate(ast, environment):
+    return evaluate_statement(ast, environment)
 
 
 from tokenizer import tokenize
@@ -188,7 +192,7 @@ from parser import parse
 
 
 def equals(code, environment, expected_result, expected_environment=None):
-    result, returning = evaluate(parse(tokenize(code)), environment)
+    result, environment = evaluate(parse(tokenize(code)), environment)
     assert (
         result == expected_result
     ), f"""ERROR: When executing-- 
@@ -206,6 +210,10 @@ def equals(code, environment, expected_result, expected_environment=None):
         expected
         {[expected_environment]},\n got \n{[environment]}.
         """
+
+def test_evaluate_repeat_until_statement():
+    print("test evaluate repeat until statement")
+    equals("repeat x=x+1; until (x >= 7)", {"x":0}, None, {"x": 7})
 
 
 def test_evaluate_single_value():
@@ -241,9 +249,16 @@ def test_evaluate_subtraction():
     equals("11-5", {}, 6)
 
 
+
 def test_evaluate_division():
     print("test evaluate division.")
     equals("15/5", {}, 3)
+
+def test_evaluate_modulus():
+    print("test evaluate modulus")
+    equals("10%3", {}, 1)
+
+
 
 
 def test_evaluate_unary_operators():
@@ -293,6 +308,9 @@ def test_evaluate_while_statement():
     equals("while (0) x=4", {"x": 0}, None, {"x": 0})
     equals("while (x>0) {x=x-1;y=y+1}", {"x": 3, "y": 0}, None, {"x": 0, "y": 3})
 
+def test_evaluate_repeat_until_statement():
+    print("test evaluate repeat until statement")
+    equals("repeat x=x+1; until (x >= 7)", {"x":0}, None, {"x": 7})
 
 def test_evaluate_block_statement():
     print("test evaluate block statement.")
@@ -369,122 +387,22 @@ def test_evaluate_print_statement():
     equals("print(1,2,3+4)", {}, None, None)
 
 
-def test_evaluate_return_statement():
-    print("test evaluate return statement.")
-    code = "return"
-    result, returning = evaluate(parse(tokenize(code)), {})
-    assert returning
-    assert result == None
-
-    code = "return 1"
-    result, returning = evaluate(parse(tokenize(code)), {})
-    assert returning
-    assert result == 1
-
-    code = "{x=2; return x;}"
-    result, returning = evaluate(parse(tokenize(code)), {})
-    assert returning
-    assert result == 2
-
-    code = "if (1) {x=2; return x;}"
-    result, returning = evaluate(parse(tokenize(code)), {})
-    assert returning
-    assert result == 2
-
-    code = "{x=0; while(x<10) {x=3; return x;}}"
-    result, returning = evaluate(parse(tokenize(code)), {})
-    assert returning
-    assert result == 3
-
 def test_evaluate_function_call():
     print("test evaluate function call.")
-    def ev(code, environment):
-        return evaluate(parse(tokenize(code)), environment)
     environment = {}
-    result, _ = ev("f = function() {return}", environment)
-    result, _ = ev("f()", environment)
-    assert result == None
-    result, _ = ev("f = function(x) {return x}", environment)
-    result, _ = ev("f(1)", environment)
-    assert result == 1
-    result, _ = ev("f = function(x) {return x + x}", environment)
-    result, _ = ev("f(1)", environment)
-    assert result == 2
-    result, _ = ev("f = function(x,y) {return x * y}", environment)
-    result, _ = ev("f(1,2)", environment)
-    assert result == 2
-    result, _ = ev("f(2,3)", environment)
-    assert result == 6
-    result, _ = ev("function g(x,y) {return x * y + 1}", environment)
-    result, _ = ev("g(1,2)", environment)
-    assert result == 3
-    result, _ = ev("g(2,3)", environment)
-    assert result == 7
-    result, _ = ev("f(1,2) + g(1,2)", environment)
-    assert result == 5
-    result, _ = ev("f(2,3) + g(2,3)", environment)
-    assert result == 13
+    code = "{f = function() {print(1)}; f()}"
+    result, environment = evaluate(parse(tokenize(code)), environment)
+    code = "{f = function() {print(1+2*4)}; f(); f();}"
+    result, environment = evaluate(parse(tokenize(code)), environment)
+    code = "{x=5; f = function() {print(x+x+x*2)}; f(); f();}"
+    result, environment = evaluate(parse(tokenize(code)), environment)
+    code = "{f = function(x) {print(x*x*x)}; f(2); f(3); f(4);}"
+    result, environment = evaluate(parse(tokenize(code)), environment)
+    code = "{z=100; f = function(x, y) {q=0.5; x=x*2;print(q*x*y*z)}; f(1,2); f(2,3); f(3,4);}"
+    result, environment = evaluate(parse(tokenize(code)), environment)
+    code = "{f = function(x, y) {return x+y;}; f(1,2); f(2,3); f(3,4);}"
 
-def test_evaluate_square_root_function():
-    print("test evaluate square root function.")
-    def ev(code, environment):
-        return evaluate(parse(tokenize(code)), environment)
-    environment = {}
-    code = """
-        function abs(x) {
-            if (x > 0) { return x; } else {return -x;}
-        }
-    """
-    result, _ = ev(code, environment)
-    result, _ = ev("abs(2)", environment)
-    assert result == 2
-    result, _ = ev("abs(-3)", environment)
-    assert result == 3
-    code = """
-        function squareRoot(number) {
-            guess = number / 2;
-            while (abs(guess * guess - number) > tolerance) {
-                guess = (guess + number / guess) / 2; 
-            };
-            return guess;
-        }    
-    """
-    result, _ = ev(code, environment)
-    result, _ = ev("tolerance = 0.00000001;", environment)
-    result, _ = ev("squareRoot(16);", environment)
-    print([result])
-    result, _ = ev("print(squareRoot(16));", environment)
-    result, _ = ev("print(squareRoot(9));", environment)
-    result, _ = ev("print(squareRoot(4));", environment)
-    result, _ = ev("print(tolerance);", environment)
 
-def test_evaluate_expression_function_call():
-    print("test evaluate expression_function_call.")
-    def ev(code, environment):
-        return evaluate(parse(tokenize(code)), environment)
-    environment = {}
-    code = """
-        function abs(x) {
-            if (x > 0) { return x; } else {return -x;}
-        }
-    """
-    result, _ = ev(code, environment)
-    result, _ = ev("abs(-2)", environment)
-    assert result == 2
-    code = """
-        function absf() {
-            return abs
-        }
-    """
-    result, _ = ev(code, environment)
-    result, _ = ev("absf", environment)
-    result, _ = ev("absf()", environment)
-    result, _ = ev("absf()(-3)", environment)
-    print(result)
-    result, _ = ev("function(x) {return x*x} (4)", environment)
-    print(result)
-
- 
 if __name__ == "__main__":
     print("test evaluator...")
     test_evaluate_single_value()
@@ -495,18 +413,16 @@ if __name__ == "__main__":
     test_evaluate_subtraction()
     test_evaluate_division()
     test_evaluate_division_by_zero()
+    test_evaluate_modulus()
     test_evaluate_unary_operators()
     test_evaluate_relational_operators()
     test_evaluate_logical_operators()
     test_evaluate_if_statement()
     test_evaluate_while_statement()
     test_evaluate_block_statement()
+    test_evaluate_repeat_until_statement()
     test_evaluate_function_expression()
     test_evaluate_function_statement()
     test_evaluate_print_statement()
-    test_evaluate_return_statement()
     test_evaluate_function_call()
-    test_evaluate_square_root_function()
-    test_evaluate_expression_function_call()
-
     print("done.")

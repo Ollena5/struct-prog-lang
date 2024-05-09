@@ -10,6 +10,8 @@ patterns = [
     [r"function", "function"],  # function keyword
     [r"return", "return"],  # return keyword
     [r"if", "if"],  # if keyword
+    [r"repeat", "repeat"], #repeat keyword
+    [r"until", "until"], #until keyword
     [r"else", "else"],  # else keyword
     [r"while", "while"],  # while keyword
     [r"for", "for"],  # for keyword
@@ -26,7 +28,6 @@ patterns = [
     [r"-", "-"],
     [r"\*", "*"],
     [r"/", "/"],
-    [r"\%", "%"],
     [r"\(", "("],
     [r"\)", ")"],
     [r"\{", "{"],
@@ -47,6 +48,7 @@ patterns = [
     [r"\]", "]"],
     [r",", ","],
     [r"\;", ";"],
+    [r"%","%"],
     [r".", "#error"],  # unexpected content
 ]
 
@@ -102,7 +104,7 @@ def tokenize(characters):
 
 def test_simple_tokens():
     print("testing simple tokens...")
-    examples = ".,[,],+,-,*,/,%,(,),{,},;,!,&&,||,<,>,<=,>=,==,!=".split(",")
+    examples = ".,[,],+,-,*,/,(,),{,},;,!,&&,||,<,>,<=,>=,==,!=,%".split(",")
     for example in examples:
         t = tokenize(example)[0]
         assert t["tag"] == example
@@ -223,6 +225,8 @@ def test_keywords():
         "import",  # (reserved for future use)
         "input",
         "print",
+        "repeat", 
+        "until",
         "exit",
     ]:
         t = tokenize(keyword)
